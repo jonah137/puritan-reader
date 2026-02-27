@@ -101,7 +101,7 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);line-height
 .toc-item .cc{font-size:11px;color:var(--text3)}
 .toc-item .read-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
 #rv .ch-title{font-size:20px;font-weight:700;color:var(--accent);margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--border);letter-spacing:1px}
-.para{margin-bottom:18px;text-indent:2em;line-height:2;text-align:justify;font-family:var(--reading-font)}
+.para{margin-bottom:18px;text-indent:2em;line-height:var(--user-lh,2);text-align:justify;font-family:var(--reading-font);font-size:var(--user-fs,17px)}
 .rnav{display:flex;justify-content:space-between;align-items:center;padding:24px 0;margin-top:16px;border-top:1px solid var(--border);gap:8px}
 .rnav button{padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);cursor:pointer;font-size:13px;font-family:var(--serif);transition:all .15s;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rnav button:hover{border-color:var(--accent);color:var(--accent)}
@@ -152,9 +152,10 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);line-height
 .spinner{display:inline-block;width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;margin-bottom:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:768px){
-  #sidebar{transform:translateX(-100%);width:85vw;max-width:320px}
+  #sidebar{transform:translateX(-100%);width:82vw;max-width:320px}
   #sidebar.vis{transform:translateX(0)}
   #main{margin-left:0!important}
+  #hl-toolbar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);top:auto!important}
   .b-grid{grid-template-columns:1fr}
   .view{padding:14px 12px}
   #search-input.open{width:120px}
@@ -170,7 +171,7 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);line-height
   .toc-item{padding:12px}
   .toc-item .ct{font-size:14px}
   #rv .ch-title{font-size:17px;margin-bottom:16px;padding-bottom:10px}
-  .para{font-size:16px;margin-bottom:14px;text-indent:1.5em;line-height:1.9}
+  .para{margin-bottom:14px;text-indent:1.5em}
   .ic{width:32px;height:32px;font-size:16px}
   #crumb{font-size:12px}
   #topbar{padding:6px 8px;gap:4px}
@@ -179,7 +180,7 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);line-height
 @media(max-width:380px){
   .b-card .t{font-size:13px}
   .view{padding:10px 8px}
-  .para{font-size:15px;text-indent:1em}
+  .para{text-indent:1em}
   #topbar{padding:4px 6px;gap:2px}
   .ic{width:28px;height:28px;font-size:14px}
   #crumb{font-size:11px}
@@ -190,7 +191,7 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);line-height
 <body>
 <div id="pbar"></div>
 <div id="app">
-  <div id="sidebar" class="hidden">
+  <div id="sidebar">
     <div class="sb-head">
       <h1>清教徒</h1>
       <div class="sub">PURITAN CLASSICS</div>
@@ -204,7 +205,7 @@ body{font-family:var(--serif);background:var(--bg);color:var(--text);line-height
     <div id="sb-p1" class="sb-panel"></div>
     <div id="sb-p2" class="sb-panel"></div>
   </div>
-  <div id="main" class="full">
+  <div id="main">
     <div id="topbar">
       <button class="ic" onclick="toggleSB()" id="hmenu">☰</button>
       <button class="ic" onclick="goBack()" id="back" style="display:none">←</button>
@@ -290,7 +291,7 @@ function nextCh(){const book=BOOKS[`${S.ai}-${S.bi}`];if(S.ci<book.chapters.leng
 function toggleSB(){const sb=document.getElementById('sidebar');const main=document.getElementById('main');const ov=document.getElementById('overlay');const w=window.innerWidth;if(w>=768){sb.classList.toggle('hidden');main.classList.toggle('full');}else{sb.classList.toggle('vis');ov.classList.toggle('show');}}
 function closeMobile(){const sb=document.getElementById('sidebar');const ov=document.getElementById('overlay');const w=window.innerWidth;if(w<768){sb.classList.remove('vis');ov.classList.remove('show');}}
 function sbTab(n,el){const tabs=el.parentNode.querySelectorAll('.sb-tab');tabs.forEach(t=>t.classList.remove('act'));el.classList.add('act');const panels=document.querySelectorAll('.sb-panel');panels.forEach(p=>p.classList.remove('act'));if(n===2)renderHL();document.getElementById(`sb-p${n}`).classList.add('act');}
-function toggleSrch(){const inp=document.getElementById('search-input');inp.classList.toggle('open');if(inp.classList.contains('open'))inp.focus();else inp.value='';}
+function toggleSrch(){const inp=document.getElementById('search-input');inp.classList.toggle('open');if(inp.classList.contains('open')){inp.focus();}else{inp.value='';if(S.v==='search')shelf();}}
 function onSrch(){const q=document.getElementById('search-input').value.trim().toLowerCase();if(!q){setView('sv');shelf();return;}S.v='search';setView('xv');updateCrumb(`搜索: ${q}`);const xv=document.getElementById('xv');xv.innerHTML='';let results=[];Object.entries(BOOKS).forEach(([bid,book])=>{const [ai,bi]=bid.split('-').map(Number);const bdata=CATALOG.find(b=>b.author_idx===ai&&b.idx===bi);book.chapters.forEach((ch,ci)=>{ch.paragraphs.forEach((p,pi)=>{if(p.toLowerCase().includes(q)){results.push({ai,bi,ci,text:p,book:bdata.title,chapter:ch.title,pi});}});});});if(!results.length){xv.innerHTML='<div class="empty">没有找到相关内容</div>';return;}results.slice(0,50).forEach(r=>{const idx=r.text.toLowerCase().indexOf(q);const start=Math.max(0,idx-30);const end=Math.min(r.text.length,idx+q.length+30);const snippet=r.text.substring(start,end);const marked=snippet.replace(new RegExp(q,'gi'),m=>`<mark>${m}</mark>`);const res=document.createElement('div');res.className='sr';res.innerHTML=`<div class="st">${r.book} • ${r.chapter}</div><div class="sx">${marked}</div>`;res.onclick=()=>openCh(r.ai,r.bi,r.ci);xv.appendChild(res);});}
 function toggleBM(){const bid=`${S.ai}-${S.bi}`;if(S.v!=='reader'||!bid)return;let bms=JSON.parse(localStorage.getItem('pr-bm')||'[]');const exists=bms.find(b=>b.ai===S.ai&&b.bi===S.bi&&b.ci===S.ci);if(exists){bms=bms.filter(b=>!(b.ai===S.ai&&b.bi===S.bi&&b.ci===S.ci));}else{const bdata=CATALOG.find(b=>b.author_idx===S.ai&&b.idx===S.bi);const book=BOOKS[bid];const ch=book.chapters[S.ci];bms.push({ai:S.ai,bi:S.bi,ci:S.ci,book:bdata.title,chapter:ch.title,date:new Date().toISOString()});}localStorage.setItem('pr-bm',JSON.stringify(bms));updateTopbar();renderBM();}
 function renderBM(){const panel=document.getElementById('sb-p1');panel.innerHTML='';const bms=JSON.parse(localStorage.getItem('pr-bm')||'[]');if(!bms.length){panel.innerHTML='<div class="empty">还没有书签</div>';return;}bms.sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(bm=>{const item=document.createElement('div');item.className='bm-item';item.innerHTML=`<div class="bm-title">${bm.book}</div><div class="bm-info">${bm.chapter}</div><span class="bm-del" onclick="delBM(${bm.ai},${bm.bi},${bm.ci},event)">✕</span>`;item.onclick=()=>openCh(bm.ai,bm.bi,bm.ci);panel.appendChild(item);});}
@@ -299,12 +300,12 @@ function updateTopbar(){const btn=document.getElementById('bm-btn');if(S.v==='re
 function updateCrumb(text){const crumb=document.getElementById('crumb');if(!text){crumb.textContent='';return;}const parts=text.split(' / ');crumb.innerHTML=parts.map((p,i)=>`<span>${p}</span>${i<parts.length-1?'<span class="sep">/</span>':''}`).join('');}
 function openSets(){document.getElementById('settings').classList.add('open');document.getElementById('set-overlay').classList.add('show');}
 function closeSets(){document.getElementById('settings').classList.remove('open');document.getElementById('set-overlay').classList.remove('show');}
-function setFS(v){document.getElementById('fs-val').textContent=v;document.body.style.fontSize=v+'px';localStorage.setItem('pr-fs',v);}
-function setLH(v){document.getElementById('lh-val').textContent=v;document.body.style.lineHeight=v;localStorage.setItem('pr-lh',v);}
+function setFS(v){document.getElementById('fs-val').textContent=v;document.documentElement.style.setProperty('--user-fs',v+'px');document.body.style.fontSize=v+'px';localStorage.setItem('pr-fs',v);}
+function setLH(v){document.getElementById('lh-val').textContent=v;document.documentElement.style.setProperty('--user-lh',v);document.body.style.lineHeight=v;localStorage.setItem('pr-lh',v);}
 function setFF(type,el){const btns=el.parentNode.querySelectorAll('.sb');btns.forEach(b=>b.classList.remove('act'));el.classList.add('act');const fonts={serif:'var(--serif)',sans:'var(--sans)',kai:'var(--kai)'};document.documentElement.style.setProperty('--reading-font',fonts[type]);localStorage.setItem('pr-ff',type);}
 function setSC(mode,el){const btns=el.parentNode.querySelectorAll('.sb');btns.forEach(b=>b.classList.remove('act'));el.classList.add('act');S.sc=mode;localStorage.setItem('pr-sc',mode);if(S.v==='reader')refreshReader();}
 function setTh(theme,el){const btns=el.parentNode.querySelectorAll('.sb');btns.forEach(b=>b.classList.remove('act'));el.classList.add('act');document.documentElement.setAttribute('data-theme',theme==='dark'?'dark':'light');localStorage.setItem('pr-theme',theme);}
-function restoreSettings(){const fs=localStorage.getItem('pr-fs')||'17';const lh=localStorage.getItem('pr-lh')||'1.9';const ff=localStorage.getItem('pr-ff')||'serif';const sc=localStorage.getItem('pr-sc')||'s';const theme=localStorage.getItem('pr-theme')||'light';document.body.style.fontSize=fs+'px';document.body.style.lineHeight=lh;document.documentElement.style.setProperty('--reading-font',{serif:'var(--serif)',sans:'var(--sans)',kai:'var(--kai)'}[ff]);document.documentElement.setAttribute('data-theme',theme==='dark'?'dark':'light');S.sc=sc;document.getElementById('fs-val').textContent=fs;document.getElementById('lh-val').textContent=lh;const ffBtns=document.querySelectorAll('.sg:nth-child(3) .sb');ffBtns.forEach((b,i)=>b.classList.toggle('act',['serif','sans','kai'][i]===ff));const scBtns=document.querySelectorAll('.sg:nth-child(4) .sb');scBtns.forEach((b,i)=>b.classList.toggle('act',['s','t'][i]===sc));const thBtns=document.querySelectorAll('.sg:nth-child(5) .sb');thBtns.forEach((b,i)=>b.classList.toggle('act',['light','dark'][i]===theme));}
+function restoreSettings(){const fs=localStorage.getItem('pr-fs')||'17';const lh=localStorage.getItem('pr-lh')||'1.9';const ff=localStorage.getItem('pr-ff')||'serif';const sc=localStorage.getItem('pr-sc')||'s';const theme=localStorage.getItem('pr-theme')||'light';document.body.style.fontSize=fs+'px';document.body.style.lineHeight=lh;document.documentElement.style.setProperty('--user-fs',fs+'px');document.documentElement.style.setProperty('--user-lh',lh);document.documentElement.style.setProperty('--reading-font',{serif:'var(--serif)',sans:'var(--sans)',kai:'var(--kai)'}[ff]);document.documentElement.setAttribute('data-theme',theme==='dark'?'dark':'light');S.sc=sc;document.getElementById('fs-val').textContent=fs;document.getElementById('lh-val').textContent=lh;const fsr=document.querySelector('#settings input[type=range]');if(fsr)fsr.value=fs;const lhr=document.querySelectorAll('#settings input[type=range]')[1];if(lhr)lhr.value=lh;const ffBtns=document.querySelectorAll('.sg:nth-child(3) .sb');ffBtns.forEach((b,i)=>b.classList.toggle('act',['serif','sans','kai'][i]===ff));const scBtns=document.querySelectorAll('.sg:nth-child(4) .sb');scBtns.forEach((b,i)=>b.classList.toggle('act',['s','t'][i]===sc));const thBtns=document.querySelectorAll('.sg:nth-child(5) .sb');thBtns.forEach((b,i)=>b.classList.toggle('act',['light','dark'][i]===theme));}
 function refreshReader(){if(S.v!=='reader')return;const bid=`${S.ai}-${S.bi}`;const book=BOOKS[bid];const ch=book.chapters[S.ci];const chc=document.getElementById('ch-c');chc.innerHTML='';ch.paragraphs.forEach((p,pi)=>{const para=document.createElement('p');para.className='para';para.dataset.pi=pi;para.textContent=S.sc==='t'?simplifiedToTraditional(p):p;chc.appendChild(para);});restoreHighlights(S.ai,S.bi,S.ci);}
 function simplifiedToTraditional(text){let result='';for(let char of text){result+=S2T_MAP[char]||char;}return result;}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
